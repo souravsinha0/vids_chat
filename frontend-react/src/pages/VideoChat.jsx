@@ -166,11 +166,11 @@ export default function VideoChat() {
   // ── render ────────────────────────────────────────────────────────────────
   if (!video) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
+      <Box sx={{ minHeight: '100vh', background: 'linear-gradient(160deg,#eef2ff 0%,#e0e7ff 40%,#ede9fe 100%)' }}>
         <Navbar />
         <Box sx={{ maxWidth: 900, mx: 'auto', px: 3, py: 4 }}>
-          <Skeleton variant="rounded" height={120} sx={{ mb: 2 }} />
-          <Skeleton variant="rounded" height={500} />
+          <Skeleton variant="rounded" height={120} sx={{ mb: 2, borderRadius: 2.5 }} />
+          <Skeleton variant="rounded" height={500} sx={{ borderRadius: 2.5 }} />
         </Box>
       </Box>
     );

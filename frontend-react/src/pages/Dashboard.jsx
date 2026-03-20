@@ -30,25 +30,43 @@ function VideoCard({ video, onDelete, onNavigate }) {
     <Card elevation={0} sx={{
       border: '1px solid',
       borderColor: 'divider',
-      borderRadius: 2,
+      borderRadius: 2.5,
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
       transition: 'box-shadow 0.2s, transform 0.2s',
-      '&:hover': { boxShadow: 4, transform: 'translateY(-2px)' }
+      bgcolor: 'background.paper',
+      '&:hover': { boxShadow: '0 8px 24px rgba(37,99,235,0.10)', transform: 'translateY(-3px)' }
     }}>
       {/* Colored top bar by status */}
-      <Box sx={{ height: 4, bgcolor: isCompleted ? 'success.main' : isProcessing ? 'primary.main' : video.status === 'failed' ? 'error.main' : 'grey.300', borderRadius: '8px 8px 0 0' }} />
+      <Box sx={{
+        height: 5,
+        background: isCompleted
+          ? 'linear-gradient(90deg, #059669, #10b981)'
+          : isProcessing
+          ? 'linear-gradient(90deg, #2563eb, #7c3aed)'
+          : video.status === 'failed'
+          ? 'linear-gradient(90deg, #dc2626, #ef4444)'
+          : 'linear-gradient(90deg, #cbd5e1, #e2e8f0)',
+        borderRadius: '10px 10px 0 0'
+      }} />
 
       <CardContent sx={{ flexGrow: 1, pb: 1 }}>
         {/* File icon + name */}
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 1.5 }}>
-          <Box sx={{ p: 1, bgcolor: 'primary.50', borderRadius: 1.5, display: 'flex', flexShrink: 0 }}>
-            <VideoLibrary sx={{ color: 'primary.main', fontSize: 22 }} />
+          <Box sx={{
+            p: 1,
+            background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+            borderRadius: 1.5,
+            display: 'flex',
+            flexShrink: 0,
+            border: '1px solid #bfdbfe'
+          }}>
+            <VideoLibrary sx={{ color: '#2563eb', fontSize: 22 }} />
           </Box>
           <Box sx={{ minWidth: 0 }}>
             <Tooltip title={video.filename}>
-              <Typography variant="subtitle2" fontWeight={600} noWrap>
+              <Typography variant="subtitle2" fontWeight={600} noWrap color="text.primary">
                 {video.filename}
               </Typography>
             </Tooltip>
@@ -76,18 +94,19 @@ function VideoCard({ video, onDelete, onNavigate }) {
           <Box sx={{ mt: 1 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
               <Typography variant="caption" color="text.secondary">Processing…</Typography>
-              <Typography variant="caption" color="primary">{video.progress}%</Typography>
+              <Typography variant="caption" color="primary.main" fontWeight={600}>{video.progress}%</Typography>
             </Box>
-            <LinearProgress variant="determinate" value={video.progress} sx={{ borderRadius: 1 }} />
+            <LinearProgress variant="determinate" value={video.progress}
+              sx={{ borderRadius: 1, height: 5, bgcolor: '#dbeafe', '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg,#2563eb,#7c3aed)' } }} />
           </Box>
         )}
 
         {/* Summary preview */}
         {video.summary && (
-          <Box sx={{ mt: 1.5, p: 1, bgcolor: 'success.50', borderRadius: 1, border: '1px solid', borderColor: 'success.200' }}>
+          <Box sx={{ mt: 1.5, p: 1.25, background: 'linear-gradient(135deg,#ecfdf5,#d1fae5)', borderRadius: 1.5, border: '1px solid #a7f3d0' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-              <AutoAwesome sx={{ fontSize: 12, color: 'success.main' }} />
-              <Typography variant="caption" fontWeight={600} color="success.dark">Summary ready</Typography>
+              <AutoAwesome sx={{ fontSize: 12, color: '#059669' }} />
+              <Typography variant="caption" fontWeight={700} color="#047857">Summary ready</Typography>
             </Box>
             <Typography variant="caption" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
               {video.summary}
@@ -103,8 +122,8 @@ function VideoCard({ video, onDelete, onNavigate }) {
         )}
       </CardContent>
 
-      <Divider />
-      <CardActions sx={{ px: 2, py: 1, justifyContent: 'space-between' }}>
+      <Divider sx={{ borderColor: 'grey.100' }} />
+      <CardActions sx={{ px: 2, py: 1.25, justifyContent: 'space-between', bgcolor: 'grey.50', borderRadius: '0 0 10px 10px' }}>
         <Button
           size="small"
           variant={isCompleted ? 'contained' : 'outlined'}
@@ -112,11 +131,13 @@ function VideoCard({ video, onDelete, onNavigate }) {
           disabled={!isCompleted}
           onClick={() => onNavigate(video.id)}
           disableElevation
+          sx={isCompleted ? { background: 'linear-gradient(135deg,#2563eb,#7c3aed)', '&:hover': { background: 'linear-gradient(135deg,#1d4ed8,#6d28d9)' } } : {}}
         >
           Chat
         </Button>
         <Tooltip title="Delete video">
-          <IconButton size="small" color="error" onClick={() => onDelete(video.id)}>
+          <IconButton size="small" color="error" onClick={() => onDelete(video.id)}
+            sx={{ '&:hover': { bgcolor: '#fee2e2' } }}>
             <Delete fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -173,14 +194,14 @@ export default function Dashboard() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
+    <Box sx={{ minHeight: '100vh', background: 'linear-gradient(160deg, #eef2ff 0%, #e0e7ff 40%, #ede9fe 100%)' }}>
       <Navbar />
 
       <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, sm: 3 }, py: 4 }}>
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4, flexWrap: 'wrap', gap: 2 }}>
           <Box>
-            <Typography variant="h5" fontWeight={700}>My Videos</Typography>
+            <Typography variant="h5" fontWeight={700} color="text.primary">My Videos</Typography>
             <Typography variant="body2" color="text.secondary">Upload videos to summarize and chat with AI</Typography>
           </Box>
           <Button
@@ -188,7 +209,7 @@ export default function Dashboard() {
             startIcon={<CloudUpload />}
             onClick={() => setUploadOpen(true)}
             disableElevation
-            sx={{ borderRadius: 2 }}
+            sx={{ background: 'linear-gradient(135deg,#2563eb,#7c3aed)', '&:hover': { background: 'linear-gradient(135deg,#1d4ed8,#6d28d9)' }, borderRadius: 2, px: 2.5 }}
           >
             Upload Video
           </Button>
@@ -198,14 +219,14 @@ export default function Dashboard() {
         {!loading && videos.length > 0 && (
           <Grid container spacing={2} sx={{ mb: 4 }}>
             {[
-              { label: 'Total Videos', value: stats.total, color: 'primary.main' },
-              { label: 'Completed', value: stats.completed, color: 'success.main' },
-              { label: 'Processing', value: stats.processing, color: 'warning.main' },
+              { label: 'Total Videos',  value: stats.total,      bg: 'linear-gradient(135deg,#eff6ff,#dbeafe)', border: '#bfdbfe', color: '#1d4ed8' },
+              { label: 'Completed',     value: stats.completed,  bg: 'linear-gradient(135deg,#ecfdf5,#d1fae5)', border: '#6ee7b7', color: '#047857' },
+              { label: 'Processing',    value: stats.processing, bg: 'linear-gradient(135deg,#fffbeb,#fef3c7)', border: '#fcd34d', color: '#b45309' },
             ].map(s => (
               <Grid item xs={4} key={s.label}>
-                <Paper elevation={0} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" fontWeight={700} sx={{ color: s.color }}>{s.value}</Typography>
-                  <Typography variant="caption" color="text.secondary">{s.label}</Typography>
+                <Paper elevation={0} sx={{ p: 2, background: s.bg, border: '1px solid', borderColor: s.border, borderRadius: 2.5, textAlign: 'center' }}>
+                  <Typography variant="h4" fontWeight={800} sx={{ color: s.color }}>{s.value}</Typography>
+                  <Typography variant="caption" color="text.secondary" fontWeight={500}>{s.label}</Typography>
                 </Paper>
               </Grid>
             ))}
@@ -217,18 +238,21 @@ export default function Dashboard() {
           <Grid container spacing={3}>
             {[1, 2, 3].map(i => (
               <Grid item xs={12} sm={6} md={4} key={i}>
-                <Skeleton variant="rounded" height={200} />
+                <Skeleton variant="rounded" height={200} sx={{ borderRadius: 2.5 }} />
               </Grid>
             ))}
           </Grid>
         ) : videos.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 12 }}>
-            <VideoLibrary sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+            <Box sx={{ display: 'inline-flex', p: 3, background: 'linear-gradient(135deg,#eff6ff,#dbeafe)', borderRadius: '50%', mb: 2 }}>
+              <VideoLibrary sx={{ fontSize: 48, color: '#2563eb' }} />
+            </Box>
             <Typography variant="h6" color="text.secondary" gutterBottom>No videos yet</Typography>
             <Typography variant="body2" color="text.disabled" sx={{ mb: 3 }}>
               Upload your first video to get started
             </Typography>
-            <Button variant="contained" startIcon={<CloudUpload />} onClick={() => setUploadOpen(true)} disableElevation>
+            <Button variant="contained" startIcon={<CloudUpload />} onClick={() => setUploadOpen(true)} disableElevation
+              sx={{ background: 'linear-gradient(135deg,#2563eb,#7c3aed)', '&:hover': { background: 'linear-gradient(135deg,#1d4ed8,#6d28d9)' } }}>
               Upload Video
             </Button>
           </Box>
@@ -244,8 +268,8 @@ export default function Dashboard() {
       </Box>
 
       <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-        <DialogTitle sx={{ fontWeight: 700 }}>Upload Video</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ fontWeight: 700, background: 'linear-gradient(135deg,#eff6ff,#dbeafe)', borderBottom: '1px solid #bfdbfe' }}>Upload Video</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
           <VideoUpload onSuccess={() => { setUploadOpen(false); fetchVideos(); }} />
         </DialogContent>
       </Dialog>
