@@ -88,7 +88,7 @@ class GeminiProvider(LLMProvider):
             "If there is no speech, rely on the visual description."
         )
         response = self.model.generate_content(prompt)
-        return response.text.strip()
+        return response.text.strip() if response.text else "Unable to generate summary."
 
     def answer_question(self, context: str, question: str) -> str:
         prompt = (
@@ -96,8 +96,10 @@ class GeminiProvider(LLMProvider):
             "which includes visual descriptions, audio info, and any speech transcript.\n\n"
             f"Context:\n{context}\n\nQuestion: {question}\nAnswer:"
         )
+        logger.info(f"[Gemini] Sending prompt (first 500 chars): {prompt[:500]}...")
         response = self.model.generate_content(prompt)
-        return response.text.strip()
+        logger.info(f"[Gemini] Received response.text: {response.text}")
+        return response.text.strip() if response.text else "Unable to generate answer."
 
 
 class OllamaProvider(LLMProvider):
@@ -223,6 +225,7 @@ def generate_summary(video_id: int):
 def answer_question(video_id: int, question: str, db: Session) -> str:
     from sqlalchemy import text
 
+    logger.info(f"[answer_question] video_id={video_id}, question={question}")
     question_emb = embed_model.encode(question).tolist()
 
     try:
@@ -243,9 +246,16 @@ def answer_question(video_id: int, question: str, db: Session) -> str:
             {"video_id": video_id}
         ).fetchall()
 
+    logger.info(f"[answer_question] Retrieved {len(similar_chunks)} chunks")
     if not similar_chunks:
         return "No content found for this video."
 
-    context = "\n\n".join([row[0] for row in similar_chunks])
+    context = "\n\n".join([row[0] for row in similar_chunks if row[0]])
+    if not context:
+        return "No valid content found for this video."
+    
+    logger.info(f"[answer_question] Context length: {len(context)} chars, first 300: {context[:300]}...")
     provider = get_llm_provider()
-    return provider.answer_question(context, question)
+    answer = provider.answer_question(context, question)
+    logger.info(f"[answer_question] LLM returned answer: {answer}")
+    return answer if answer else "Unable to generate answer."
