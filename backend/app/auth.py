@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from .config import settings
@@ -38,6 +38,22 @@ def decode_token(token: str) -> dict:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+def get_user_from_token(token: str, db: Session) -> models.User:
+    payload = decode_token(token)
+    user_id_str = payload.get("sub")
+    if user_id_str is None:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    try:
+        user_id = int(user_id_str)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid token format")
+
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=401, detail="User not found or inactive")
+    return user
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
@@ -48,19 +64,19 @@ def get_current_user(
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    token = credentials.credentials
-    payload = decode_token(token)
-    user_id_str = payload.get("sub")
-    if user_id_str is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    try:
-        user_id = int(user_id_str)
-    except (ValueError, TypeError):
-        raise HTTPException(status_code=401, detail="Invalid token format")
-    
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if user is None or not user.is_active:
-        raise HTTPException(status_code=401, detail="User not found or inactive")
-    return user
+
+    return get_user_from_token(credentials.credentials, db)
+
+def get_current_user_for_media(
+    token: Optional[str] = Query(default=None),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db)
+) -> models.User:
+    resolved_token = token or (credentials.credentials if credentials else None)
+    if not resolved_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return get_user_from_token(resolved_token, db)

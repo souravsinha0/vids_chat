@@ -1,10 +1,11 @@
 from fastapi import APIRouter, UploadFile, File, BackgroundTasks, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import os
 import shutil
 from app import models, schemas
 from ..database import get_db
-from ..auth import get_current_user
+from ..auth import get_current_user, get_current_user_for_media
 from ..utils.file_utils import save_upload_file, delete_video_files
 from ..services.video_processor import process_video
 from ..config import settings
@@ -65,6 +66,32 @@ def get_video(
     if not video:
         raise HTTPException(404, "Video not found")
     return video
+
+@router.get("/{video_id}/media")
+def stream_video(
+    video_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user_for_media)
+):
+    video = db.query(models.Video).filter(
+        models.Video.id == video_id,
+        models.Video.user_id == current_user.id
+    ).first()
+    if not video:
+        raise HTTPException(404, "Video not found")
+    if not os.path.exists(video.file_path):
+        raise HTTPException(404, "Video file not found")
+
+    media_type = {
+        ".mp4": "video/mp4",
+        ".mov": "video/quicktime",
+        ".avi": "video/x-msvideo",
+        ".mpeg": "video/mpeg",
+        ".mpg": "video/mpeg",
+        ".mkv": "video/x-matroska",
+    }.get(os.path.splitext(video.file_path)[1].lower(), "application/octet-stream")
+
+    return FileResponse(video.file_path, media_type=media_type, filename=video.filename)
 
 @router.delete("/{video_id}")
 def delete_video(
