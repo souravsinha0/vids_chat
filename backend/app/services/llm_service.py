@@ -80,12 +80,37 @@ class GeminiProvider(LLMProvider):
         self.model = genai.GenerativeModel(settings.gemini_model)
 
     def summarize(self, context: str) -> str:
+        # prompt = (
+        #     f"{context}\n\n"
+        #     "Based on the above information, provide a comprehensive summary of this video. "
+        #     "Include: what the video is about, what is happening, who is involved, "
+        #     "the setting, mood, and any key moments. "
+        #     "If there is no speech, rely on the visual description."
+        # )
         prompt = (
             f"{context}\n\n"
-            "Based on the above information, provide a comprehensive summary of this video. "
-            "Include: what the video is about, what is happening, who is involved, "
-            "the setting, mood, and any key moments. "
-            "If there is no speech, rely on the visual description."
+            "You are an expert, neutral video summarizer. Your goal is to create a clear, concise, and engaging summary of the video based on the provided frame descriptions (and any transcript or audio context if available).\n\n"
+            "Create a well-structured summary with the following format:\n\n"
+            "1. **Brief Overview** (3-4 sentences maximum)\n"
+            "   - What the video is about, its main topic or purpose, and overall context.\n\n"
+            "2. **Key Content & Flow**\n"
+            "   - Describe the main events, scenes, actions, or topics in logical order.\n"
+            "   - Highlight what is happening visually and (if present) what is being said or explained.\n"
+            "   - For slide-based or informational videos, summarize the important points, processes, data, or takeaways.\n"
+            "   - For narrative, entertainment, or action videos, focus on the story progression, key moments, and developments.\n\n"
+            "3. **Important Details & Highlights**\n"
+            "   - Key facts, results, messages, techniques, or notable elements shown in the video.\n"
+            "   - Mention any important data, demonstrations, examples, or outcomes.\n\n"
+            "4. **Conclusion / Final Message** (if applicable)\n"
+            "   - How the video ends and any closing takeaway or call-to-action.\n\n"
+            "Important Guidelines:\n"
+            "- Adapt your style and depth naturally to the video type. Be factual and objective.\n"
+            "- Prioritize visual information from the frames since this is a frame-based tool.\n"
+            "- If the video has audio/speech, incorporate the spoken content. If it is mute or silent, rely primarily on the visual descriptions.\n"
+            "- Do NOT force or mention 'mood', 'atmosphere', 'environment', 'cinematic style', 'emotional tone', or 'setting' unless they are genuinely central to understanding the video.\n"
+            "- Keep the summary readable, scannable, and balanced in length (aim for brevity while covering the essentials).\n"
+            "- Use bullet points or short paragraphs for clarity when helpful.\n"
+            "- Never invent content that is not supported by the frames or provided context."
         )
         response = self.model.generate_content(prompt)
         return response.text.strip() if response.text else "Unable to generate summary."

@@ -3,8 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box, Typography, TextField, Button, Paper, CircularProgress,
   IconButton, Divider, Drawer, List, ListItem, ListItemButton,
-  ListItemText, ListItemSecondaryAction, Tooltip, Chip, Skeleton,
-  Avatar, LinearProgress
+  ListItemText, Tooltip, Chip, Skeleton, Avatar, LinearProgress
 } from '@mui/material';
 import {
   Send, ArrowBack, AutoAwesome, History, Delete,
@@ -14,6 +13,7 @@ import { videoAPI, chatAPI } from '../services/api';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar';
 import MarkdownRenderer from '../components/MarkdownRenderer';
+import VideoPreview from '../components/VideoPreview';
 
 const POLL_INTERVAL = 3000;
 
@@ -33,7 +33,6 @@ export default function VideoChat() {
   const messagesEndRef = useRef(null);
   const pollRef = useRef(null);
 
-  // ── fetch video, auto-poll while summarizing ──────────────────────────────
   const fetchVideo = useCallback(async () => {
     try {
       const res = await videoAPI.get(videoId);
@@ -42,6 +41,7 @@ export default function VideoChat() {
     } catch {
       toast.error('Failed to load video');
       navigate('/');
+      return null;
     }
   }, [videoId, navigate]);
 
@@ -49,12 +49,11 @@ export default function VideoChat() {
     fetchVideo();
   }, [fetchVideo]);
 
-  // Poll until summary appears after requesting it
   const startSummaryPoll = useCallback(() => {
     clearInterval(pollRef.current);
     pollRef.current = setInterval(async () => {
-      const v = await fetchVideo();
-      if (v?.summary) {
+      const nextVideo = await fetchVideo();
+      if (nextVideo?.summary) {
         clearInterval(pollRef.current);
         setSummarizing(false);
         toast.success('Summary ready!');
@@ -68,17 +67,14 @@ export default function VideoChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // ── summarize ─────────────────────────────────────────────────────────────
   const handleSummarize = async () => {
     setSummarizing(true);
     try {
       const res = await videoAPI.summarize(videoId);
       if (res.data.summary) {
-        // Already existed
         setVideo(prev => ({ ...prev, summary: res.data.summary }));
         setSummarizing(false);
       } else {
-        // Background job started — poll
         startSummaryPoll();
       }
     } catch {
@@ -87,7 +83,6 @@ export default function VideoChat() {
     }
   };
 
-  // ── chat ──────────────────────────────────────────────────────────────────
   const handleAsk = async (e) => {
     e.preventDefault();
     if (!question.trim()) return;
@@ -107,13 +102,12 @@ export default function VideoChat() {
       }]);
     } catch {
       toast.error('Failed to get answer');
-      setMessages(prev => prev.slice(0, -1)); // remove optimistic user msg
+      setMessages(prev => prev.slice(0, -1));
     } finally {
       setChatLoading(false);
     }
   };
 
-  // ── history ───────────────────────────────────────────────────────────────
   const openHistory = async () => {
     setHistoryOpen(true);
     setLoadingHistory(true);
@@ -163,7 +157,6 @@ export default function VideoChat() {
     setHistoryOpen(false);
   };
 
-  // ── render ────────────────────────────────────────────────────────────────
   if (!video) {
     return (
       <Box sx={{ minHeight: '100vh', background: 'linear-gradient(160deg,#eef2ff 0%,#e0e7ff 40%,#ede9fe 100%)' }}>
@@ -183,17 +176,15 @@ export default function VideoChat() {
       <Navbar />
 
       <Box sx={{ maxWidth: 900, mx: 'auto', px: { xs: 2, sm: 3 }, py: 3 }}>
-        {/* Back */}
         <Button startIcon={<ArrowBack />} onClick={() => navigate('/')} sx={{ mb: 2, color: 'text.secondary' }}>
           Back to Videos
         </Button>
 
-        {/* Video info card */}
         <Paper elevation={0} sx={{ p: 3, mb: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) 280px' }, gap: 2.5, alignItems: 'start' }}>
             <Box>
               <Typography variant="h6" fontWeight={700}>{video.filename}</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
                 <AccessTime sx={{ fontSize: 13, color: 'text.disabled' }} />
                 <Typography variant="caption" color="text.disabled">
                   {new Date(video.upload_time).toLocaleString()}
@@ -206,29 +197,33 @@ export default function VideoChat() {
                   sx={{ ml: 1, height: 20, fontSize: 11 }}
                 />
               </Box>
+
+              {!video.summary && (
+                <Button
+                  variant="contained"
+                  startIcon={summarizing ? <CircularProgress size={16} color="inherit" /> : <AutoAwesome />}
+                  onClick={handleSummarize}
+                  disabled={summarizing || !isReady}
+                  disableElevation
+                  sx={{ borderRadius: 2, minWidth: 160, mt: 2 }}
+                >
+                  {summarizing ? 'Summarizing...' : 'Generate Summary'}
+                </Button>
+              )}
             </Box>
 
-            {/* Summarize button / loader / summary */}
-            {!video.summary && (
-              <Button
-                variant="contained"
-                startIcon={summarizing ? <CircularProgress size={16} color="inherit" /> : <AutoAwesome />}
-                onClick={handleSummarize}
-                disabled={summarizing || !isReady}
-                disableElevation
-                sx={{ borderRadius: 2, minWidth: 160 }}
-              >
-                {summarizing ? 'Summarizing…' : 'Generate Summary'}
-              </Button>
-            )}
+            <VideoPreview
+              videoId={video.id}
+              title={video.filename}
+              height={190}
+            />
           </Box>
 
-          {/* Summary */}
           {summarizing && !video.summary && (
             <Box sx={{ mt: 2 }}>
               <LinearProgress sx={{ borderRadius: 1, mb: 1 }} />
               <Typography variant="caption" color="text.secondary">
-                AI is analyzing your video — this may take a moment…
+                AI is analyzing your video. This may take a moment...
               </Typography>
             </Box>
           )}
@@ -244,9 +239,7 @@ export default function VideoChat() {
           )}
         </Paper>
 
-        {/* Chat panel */}
         <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, display: 'flex', flexDirection: 'column', height: 520 }}>
-          {/* Chat header */}
           <Box sx={{ px: 2.5, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid', borderColor: 'divider' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <ChatIcon sx={{ color: 'primary.main', fontSize: 20 }} />
@@ -269,13 +262,12 @@ export default function VideoChat() {
             </Box>
           </Box>
 
-          {/* Messages */}
           <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 2.5, py: 2 }}>
             {messages.length === 0 ? (
               <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                 <SmartToy sx={{ fontSize: 48, color: 'text.disabled' }} />
                 <Typography variant="body2" color="text.secondary">
-                  {isReady ? 'Ask anything about this video' : 'Video is still processing…'}
+                  {isReady ? 'Ask anything about this video' : 'Video is still processing...'}
                 </Typography>
               </Box>
             ) : (
@@ -307,7 +299,6 @@ export default function VideoChat() {
               ))
             )}
 
-            {/* Typing indicator */}
             {chatLoading && (
               <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
                 <Avatar sx={{ width: 30, height: 30, bgcolor: 'grey.200' }}>
@@ -333,13 +324,12 @@ export default function VideoChat() {
             <div ref={messagesEndRef} />
           </Box>
 
-          {/* Input */}
           <Box sx={{ px: 2.5, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
             <form onSubmit={handleAsk}>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <TextField
                   fullWidth
-                  placeholder={isReady ? 'Ask a question about this video…' : 'Video is still processing…'}
+                  placeholder={isReady ? 'Ask a question about this video...' : 'Video is still processing...'}
                   value={question}
                   onChange={e => setQuestion(e.target.value)}
                   disabled={chatLoading || !isReady}
@@ -361,7 +351,6 @@ export default function VideoChat() {
         </Paper>
       </Box>
 
-      {/* History Drawer */}
       <Drawer anchor="right" open={historyOpen} onClose={() => setHistoryOpen(false)}
         PaperProps={{ sx: { width: 320, p: 0 } }}
       >

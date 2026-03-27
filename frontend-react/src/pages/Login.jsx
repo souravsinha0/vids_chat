@@ -32,7 +32,7 @@ export default function Login() {
       <Paper elevation={0} sx={{ p: 4, width: '100%', maxWidth: 400, border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
         <Box sx={{ textAlign: 'center', mb: 3 }}>
           <VideoLibrary sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-          <Typography variant="h5" fontWeight={700}>VideoAI</Typography>
+          <Typography variant="h5" fontWeight={700}>Video Intelligence</Typography>
           <Typography variant="body2" color="text.secondary">Sign in to your account</Typography>
         </Box>
 

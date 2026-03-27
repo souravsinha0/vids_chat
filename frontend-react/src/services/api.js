@@ -51,6 +51,12 @@ export const videoAPI = {
   delete: (id) => api.delete(`/videos/${id}`),
   getStatus: (id) => api.get(`/videos/${id}/status`),
   summarize: (id) => api.post(`/videos/${id}/summarize`),
+  getPlaybackUrl: (id) => {
+    const token = localStorage.getItem('token');
+    const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+    const url = `${base}/videos/${id}/media`;
+    return token ? `${url}?token=${encodeURIComponent(token)}` : url;
+  },
 };
 
 export const chatAPI = {

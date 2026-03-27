@@ -232,7 +232,8 @@ def analyze_video_multimodal(
     video_path: str,
     filename: str,
     transcript: str,
-    audio_path: Optional[str] = None
+    audio_path: Optional[str] = None,
+    audio_status_note: Optional[str] = None
 ) -> str:
     """
     Main entry point. Combines visual frame analysis + audio characteristics
@@ -249,10 +250,10 @@ def analyze_video_multimodal(
     logger.info(f"Starting multimodal analysis for: {filename}")
 
     # Step 1: Detect audio characteristics
-    audio_notes = ""
+    audio_notes = audio_status_note or ""
     if audio_path and os.path.exists(audio_path):
         audio_info = detect_audio_characteristics(audio_path)
-        audio_notes = audio_info["notes"]
+        audio_notes = audio_info["notes"] or audio_notes
         logger.info(f"Audio analysis: {audio_notes}")
 
     # Step 2: Extract visual frames

@@ -13,6 +13,7 @@ import { videoAPI } from '../services/api';
 import { toast } from 'react-toastify';
 import VideoUpload from '../components/VideoUpload';
 import Navbar from '../components/Navbar';
+import VideoPreview from '../components/VideoPreview';
 
 const STATUS_CONFIG = {
   pending:    { color: 'default',  icon: <HourglassEmpty sx={{ fontSize: 14 }} />, label: 'Pending' },
@@ -52,6 +53,15 @@ function VideoCard({ video, onDelete, onNavigate }) {
       }} />
 
       <CardContent sx={{ flexGrow: 1, pb: 1 }}>
+        <Box sx={{ mb: 1.75 }}>
+          <VideoPreview
+            videoId={video.id}
+            title={video.filename}
+            height={160}
+            compact
+          />
+        </Box>
+
         {/* File icon + name */}
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 1.5 }}>
           <Box sx={{
