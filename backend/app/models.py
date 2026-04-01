@@ -3,6 +3,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
 from .database import Base
+from .config import NIM_EMBEDDING_DIMENSION
 
 class User(Base):
     __tablename__ = "users"
@@ -41,7 +42,7 @@ class TranscriptChunk(Base):
     video_id = Column(Integer, ForeignKey("videos.id", ondelete="CASCADE"))
     chunk_index = Column(Integer, nullable=False)
     content = Column(Text, nullable=False)
-    embedding = Column(Vector(384))  # dimension for all-MiniLM-L6-v2
+    embedding = Column(Vector(NIM_EMBEDDING_DIMENSION))
     
     video = relationship("Video", back_populates="chunks")
 

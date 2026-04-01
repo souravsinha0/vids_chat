@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS transcript_chunks (
     video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE,
     chunk_index INTEGER NOT NULL,
     content TEXT NOT NULL,
-    embedding vector(384)
+    embedding vector(2048)
 );
 
 -- Chat sessions

@@ -4,7 +4,7 @@ import google.generativeai as genai
 from sqlalchemy.orm import Session
 from ..config import settings
 from .. import models
-from .embedding_service import model as embed_model
+from .embedding_service import generate_query_embedding
 
 logger = logging.getLogger(__name__)
 
@@ -251,13 +251,13 @@ def answer_question(video_id: int, question: str, db: Session) -> str:
     from sqlalchemy import text
 
     logger.info(f"[answer_question] video_id={video_id}, question={question}")
-    question_emb = embed_model.encode(question).tolist()
+    question_emb = generate_query_embedding(question)
 
     try:
         similar_chunks = db.execute(
             text("""
                 SELECT content FROM transcript_chunks
-                WHERE video_id = :video_id
+                WHERE video_id = :video_id AND embedding IS NOT NULL
                 ORDER BY embedding <-> CAST(:emb AS vector)
                 LIMIT 5
             """),
