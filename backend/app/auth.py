@@ -9,11 +9,10 @@ from .config import settings
 from .database import get_db
 from . import models
 
-# bcrypt itself rejects passwords longer than 72 bytes.
-# bcrypt_sha256 pre-hashes the password and then applies bcrypt,
-# which avoids that limit while keeping secure password hashing.
+# Use PBKDF2-SHA256 for new passwords so hashing doesn't depend on the
+# installed bcrypt backend. Keep bcrypt-based schemes for legacy hashes.
 pwd_context = CryptContext(
-    schemes=["bcrypt_sha256", "bcrypt"],
+    schemes=["pbkdf2_sha256", "bcrypt_sha256", "bcrypt"],
     deprecated="auto",
 )
 security = HTTPBearer(auto_error=False)
@@ -23,7 +22,11 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def verify_and_update_password(plain_password: str, hashed_password: str) -> tuple[bool, str | None]:
-    return pwd_context.verify_and_update(plain_password, hashed_password)
+    try:
+        return pwd_context.verify_and_update(plain_password, hashed_password)
+    except ValueError:
+        # bcrypt 5.x can raise during verification with passlib's bcrypt handlers.
+        return False, None
 
 
 def get_password_hash(password: str) -> str:
