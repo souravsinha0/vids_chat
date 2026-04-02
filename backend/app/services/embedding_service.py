@@ -4,7 +4,7 @@ import httpx
 from sqlalchemy.orm import Session
 
 from .. import models
-from ..config import NIM_EMBEDDING_MODEL, settings
+from ..config import settings
 
 
 def chunk_text(text: str, chunk_size=500, overlap=100):
@@ -26,24 +26,33 @@ def _embeddings_endpoint() -> str:
 
 
 def _request_embeddings(inputs: Iterable[str], input_type: str) -> list[list[float]]:
+    endpoint = _embeddings_endpoint()
     payload = {
         "input": list(inputs),
-        "model": NIM_EMBEDDING_MODEL,
+        "model": settings.nim_embedding_model,
         "input_type": input_type,
-        "embedding_type": "float",
-        "dimensions": settings.embedding_dimension,
     }
 
     if not payload["input"]:
         return []
 
     response = httpx.post(
-        _embeddings_endpoint(),
+        endpoint,
         json=payload,
-        headers={"Accept": "application/json"},
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
         timeout=120,
     )
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        raise RuntimeError(
+            f"NIM embedding request failed: {exc.response.status_code} for {endpoint}. "
+            f"Model={settings.nim_embedding_model}, input_type={input_type}, "
+            f"response={exc.response.text}"
+        ) from exc
 
     data = response.json().get("data", [])
     ordered_data = sorted(data, key=lambda item: item.get("index", 0))
