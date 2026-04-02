@@ -9,11 +9,22 @@ from .config import settings
 from .database import get_db
 from . import models
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# bcrypt itself rejects passwords longer than 72 bytes.
+# bcrypt_sha256 pre-hashes the password and then applies bcrypt,
+# which avoids that limit while keeping secure password hashing.
+pwd_context = CryptContext(
+    schemes=["bcrypt_sha256", "bcrypt"],
+    deprecated="auto",
+)
 security = HTTPBearer(auto_error=False)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
+
+
+def verify_and_update_password(plain_password: str, hashed_password: str) -> tuple[bool, str | None]:
+    return pwd_context.verify_and_update(plain_password, hashed_password)
+
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
