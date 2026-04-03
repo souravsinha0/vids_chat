@@ -1,11 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routes import videos, chat, history, auth
-from .database import engine, Base
-import os
+from .database import initialize_database
 
-# Create tables (optional, use migrations in production)
-Base.metadata.create_all(bind=engine)
+initialize_database()
 
 app = FastAPI(title="Video Summarizer API")
 

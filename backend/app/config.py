@@ -7,6 +7,9 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent.parent.parent
 ENV_FILE = ROOT_DIR / ".env"
 
+NIM_EMBEDDING_MODEL = "nvidia/llama-nemotron-embed-1b-v2"
+NIM_EMBEDDING_DIMENSION = 2048
+
 class Settings(BaseSettings):
     # Database
     postgres_user: str = "postgres"
@@ -32,6 +35,11 @@ class Settings(BaseSettings):
     # Local LLM (Ollama)
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama2"
+
+    # NVIDIA NIM embedding service
+    nim_embedder_url: str = "http://localhost:8010/v1"
+    nim_embedding_model: str = NIM_EMBEDDING_MODEL
+    embedding_dimension: int = NIM_EMBEDDING_DIMENSION
     
     # Whisper
     whisper_model: str = "small"

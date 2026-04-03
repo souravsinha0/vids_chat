@@ -28,13 +28,22 @@ export default function Navbar() {
           <Box sx={{ p: 0.5, bgcolor: 'rgba(255,255,255,0.15)', borderRadius: 1.5, display: 'flex' }}>
             <VideoLibrary sx={{ color: '#93c5fd', fontSize: 22 }} />
           </Box>
-          <Typography
+          {/* <Typography
             variant="h6"
             fontWeight={800}
             sx={{ flexGrow: 0, cursor: 'pointer', color: '#fff', letterSpacing: '-0.3px' }}
             onClick={() => navigate('/')}
           >
             Video<span style={{ color: '#93c5fd' }}>AI</span>
+          </Typography> */}
+          <Typography
+            variant="h6"
+            fontWeight={800}
+            sx={{ flexGrow: 0, cursor: 'pointer', color: '#fff', letterSpacing: '-0.3px' }}
+            onClick={() => navigate('/')}
+          >
+            {/* VELOCIS Branding */}
+            Velocis<span style={{ color: '#93c5fd', fontWeight: 400 }}>Sight</span>
           </Typography>
         </Box>
         <Box sx={{ flexGrow: 1 }} />

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS transcript_chunks (
     video_id INTEGER REFERENCES videos(id) ON DELETE CASCADE,
     chunk_index INTEGER NOT NULL,
     content TEXT NOT NULL,
-    embedding vector(384)
+    embedding vector(2048)
 );
 
 -- Chat sessions
@@ -46,4 +46,4 @@ CREATE INDEX IF NOT EXISTS idx_transcript_chunks_video_id ON transcript_chunks(v
 CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id);
 
 -- Vector index (HNSW for approximate nearest neighbor)
-CREATE INDEX IF NOT EXISTS idx_transcript_chunks_embedding_hnsw ON transcript_chunks USING hnsw (embedding vector_cosine_ops);
+-- CREATE INDEX IF NOT EXISTS idx_transcript_chunks_embedding_ivfflat ON transcript_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);

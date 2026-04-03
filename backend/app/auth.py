@@ -9,11 +9,25 @@ from .config import settings
 from .database import get_db
 from . import models
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use PBKDF2-SHA256 for new passwords so hashing doesn't depend on the
+# installed bcrypt backend. Keep bcrypt-based schemes for legacy hashes.
+pwd_context = CryptContext(
+    schemes=["pbkdf2_sha256", "bcrypt_sha256", "bcrypt"],
+    deprecated="auto",
+)
 security = HTTPBearer(auto_error=False)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
+
+
+def verify_and_update_password(plain_password: str, hashed_password: str) -> tuple[bool, str | None]:
+    try:
+        return pwd_context.verify_and_update(plain_password, hashed_password)
+    except ValueError:
+        # bcrypt 5.x can raise during verification with passlib's bcrypt handlers.
+        return False, None
+
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
